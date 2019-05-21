@@ -21,6 +21,9 @@ output_filepath = "/root/Speech-to-text/text/"
 UPLOAD_FOLDER = '/root/Speech-to-text/uploads'
 ALLOWED_EXTENSIONS = set(['wav', 'mp3', 'm4a'])
 bucket_name = 'voice_upload'
+Language_code = 'nl-NL' # https://cloud.google.com/speech-to-text/docs/languages
+
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -131,7 +134,7 @@ def google_transcribe(uploaded_file_path):
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=frame_rate,
-        language_code='nl-NL',
+        language_code=Language_code,
         enable_speaker_diarization=True,
         diarization_speaker_count=2)
 
