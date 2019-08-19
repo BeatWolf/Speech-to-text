@@ -100,7 +100,10 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(source_file_name)
+    try:
+        blob.upload_from_filename(source_file_name)
+    except Exception as e:
+        print(e)
 
 def delete_blob(bucket_name, blob_name):
     """Deletes a blob from the bucket."""
@@ -108,7 +111,10 @@ def delete_blob(bucket_name, blob_name):
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(blob_name)
 
-    blob.delete()
+    try:
+        blob.delete()
+    except Exception as e:
+        print(e)
 
 
 def google_transcribe(uploaded_file_path):
