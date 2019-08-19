@@ -1,27 +1,24 @@
-
-import os
 import wave
-import io
 import os
-import time
-import sys
 from google.cloud import speech_v1p1beta1 as speech
 from google.cloud.speech_v1p1beta1 import enums
 from google.cloud.speech_v1p1beta1 import types
 from flask import Flask, flash, request, redirect, url_for, send_file
 from werkzeug.utils import secure_filename
 from google.cloud import storage
+
 from pydub import AudioSegment
 
-reload(sys)  # Reload does the trick!
-sys.setdefaultencoding('UTF8')
 
-filepath = "/root/Speech-to-text/audio/"
-output_filepath = "/root/Speech-to-text/text/"
-UPLOAD_FOLDER = '/root/Speech-to-text/uploads'
+filepath = "/media/windowsData/voice2text/"
+output_filepath = "/media/windowsData/voice2text/text/"
+UPLOAD_FOLDER = "/media/windowsData/voice2text/upload/"
 ALLOWED_EXTENSIONS = set(['wav', 'mp3', 'm4a'])
-bucket_name = 'voice_upload'
-Language_code = 'nl-NL' # https://cloud.google.com/speech-to-text/docs/languages
+bucket_name = 'voice_upload_test' #You need to create this bucket fist on the
+Language_code = 'fr-FR' # https://cloud.google.com/speech-to-text/docs/languages
+
+credential_path = "auth.json" #Save the auth.json from google in this project folder
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(credential_path)
 
 
 app = Flask(__name__)
@@ -48,17 +45,17 @@ def upload_file():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             uploaded_file_path = str(app.config['UPLOAD_FOLDER']+"/"+filename)
-            print "File uploaded: \t" + uploaded_file_path
+            print("File uploaded: \t" + uploaded_file_path)
 
             exists = os.path.isfile(output_filepath + filename.split('.')[0] + '.txt')
             if exists:
-                print "File already exists serving that one: \t"
-                print output_filepath + filename.split('.')[0] + '.txt'
+                print("File already exists serving that one: \t")
+                print(output_filepath + filename.split('.')[0] + '.txt')
                 return send_file(output_filepath + filename.split('.')[0] + '.txt')
 
             else:
                 transcript = google_transcribe(uploaded_file_path)
-                print "Saving Transcript"
+                print("Saving Transcript")
                 transcript_filename = filename.split('.')[0] + '.txt'
                 write_transcripts(transcript_filename, transcript)
                 return send_file(output_filepath + transcript_filename)
@@ -67,7 +64,7 @@ def upload_file():
     <!doctype html>
     <title>Upload new File</title>
     <h1>Upload new interview</h1>
-    <h2>De laad tijd van deze pagina is ongeveer de lengte van het interview!!!!</h2>
+    <h2>The loading time of this page is approximately the length of the interview!!!!</h2>
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
@@ -115,17 +112,17 @@ def delete_blob(bucket_name, blob_name):
 
 
 def google_transcribe(uploaded_file_path):
-    print "Converting: \t" + uploaded_file_path.split("/")[-1]
+    print("Converting: \t" + uploaded_file_path.split("/")[-1])
     wav_file_path = mp3_to_wav(uploaded_file_path)
-    print "Converted: \t" + wav_file_path.split("/")[-1]
-    print "Checking frame rate: \t", wav_file_path.split("/")[-1]
+    print("Converted: \t" + wav_file_path.split("/")[-1])
+    print("Checking frame rate: \t", wav_file_path.split("/")[-1])
     frame_rate, channels = frame_rate_channel(wav_file_path)
     wav_name = wav_file_path.split("/")[-1]
 
-    print "Uploading blob: \t",wav_name
+    print("Uploading blob: \t",wav_name)
     upload_blob(bucket_name, wav_file_path, wav_name)
 
-    print "Starting Transcripting: \t",wav_name
+    print("Starting Transcripting: \t",wav_name)
     gcs_uri = 'gs://'+bucket_name+'/' + wav_name
     transcript = ''
     client = speech.SpeechClient()
@@ -157,7 +154,7 @@ def google_transcribe(uploaded_file_path):
 
     transcript += "speaker {}: {}".format(tag, speaker)
 
-    print "Deleting blob: \t", wav_name
+    print("Deleting blob: \t", wav_name)
     delete_blob(bucket_name, wav_name)
     return transcript
 
